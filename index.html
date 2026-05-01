@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillBridge — Map Your Gaps. Swap Your Skills. Grow Together.</title>
+<meta name="description" content="SkillBridge unifies AI-powered career gap analysis (MapMySkills) with peer-to-peer skill exchange (SkillSwap). Upload your resume, get a 30-day roadmap, and swap skills with peers — all in one platform.">
+<meta property="og:title" content="SkillBridge — The Complete Career Growth Platform">
+<meta property="og:description" content="AI career gap analysis + peer skill exchange. Built for students. Powered by Claude AI.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://skillbridge.io">
+<meta property="og:image" content="https://skillbridge.io/assets/og-image.png">
+<meta property="og:site_name" content="SkillBridge">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SkillBridge — Map Your Gaps. Swap Your Skills.">
+<meta name="twitter:description" content="AI-powered skill gap analysis + peer-to-peer skill exchange for Indian students.">
+<meta name="twitter:image" content="https://skillbridge.io/assets/og-image.png">
+<meta name="keywords" content="skill swap, skill exchange, career gap analysis, AI career, peer learning, student platform, India">
+<meta name="author" content="SkillBridge Team">
+<link rel="canonical" href="https://skillbridge.io">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2300d4c8'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='16' font-family='sans-serif'%3E🗺%3C/text%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/features.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+<div id="progressBar" class="progress-bar"></div>
+<div id="cursorGlow"></div>
+<div id="toastContainer"></div>
+
+<!-- ═══════════════════════════════ NAV ═══════════════════════════════ -->
+<nav id="mainNav">
+  <a href="#" class="nav-logo" onclick="showPage('home');return false;">
+    <div class="logo-mark">🗺</div>
+    <div class="logo-text">Skill<span>Pro</span></div>
+  </a>
+
+  <!-- Platform Toggle -->
+  <div class="platform-toggle" id="platformToggle">
+    <button class="platform-btn active" id="ptgMap" onclick="switchPlatform('mapmyskills')">🗺 MapMySkills</button>
+    <button class="platform-btn" id="ptgSwap" onclick="switchPlatform('skillswap')">⇄ SkillSwap</button>
+  </div>
+
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#" data-page="home" onclick="showPage('home');return false;" class="active">Home</a></li>
+    <li><a href="#" data-page="features" onclick="showPage('features');return false;">Features</a></li>
+    <li><a href="#" data-page="jobs" onclick="showPage('jobs');return false;">Careers</a></li>
+    <li><a href="#" data-page="explore" onclick="showPage('explore');return false;">Explore</a></li>
+    <li><a href="#" data-page="team" onclick="showPage('team');return false;">Team</a></li>
+    <li><a href="#" data-page="contact" onclick="showPage('contact');return false;">Contact</a></li>
+  </ul>
+
+  <div class="nav-actions">
+    <button class="nav-login-btn" id="navLoginBtn" onclick="openModal('loginModal')">Log In</button>
+    <button class="nav-signup-btn" id="navSignupBtn" onclick="openModal('signupModal')">Get Started →</button>
+    <button class="nav-login-btn" id="navProfileBtn" onclick="showPage('profile')" style="display:none;">👤 Profile</button>
+    <button class="nav-login-btn" id="navLogoutBtn" onclick="handleLogout()" style="display:none;color:var(--danger);">🚪 Logout</button>
+    <button class="theme-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+    <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav" id="mobileNav">
+  <a href="#" onclick="showPage('home');return false;">🏠 Home</a>
+  <a href="#" onclick="showPage('features');return false;">⚡ Features</a>
+  <a href="#" onclick="showPage('jobs');return false;">🎯 Career Domains</a>
+  <a href="#" onclick="showPage('explore');return false;">🔍 Explore Skills</a>
+  <a href="#" onclick="showPage('dashboard');return false;">📊 Dashboard</a>
+  <a href="#" onclick="showPage('team');return false;">👥 Team</a>
+  <a href="#" onclick="showPage('contact');return false;">✉️ Contact</a>
+  <a id="mobLoginBtn" href="#" onclick="openModal('loginModal');return false;">🔐 Log In</a>
+  <a id="mobSignupBtn" href="#" onclick="openModal('signupModal');return false;">🚀 Get Started</a>
+  <a id="mobProfileBtn" href="#" onclick="showPage('profile');return false;" style="display:none;">👤 My Profile</a>
+  <a id="mobLogoutBtn" href="#" onclick="handleLogout();return false;" style="display:none;color:var(--danger);">🚪 Log Out</a>
+</nav>
+
+
+<!-- ════════════════════ PAGE: HOME (Unified) ════════════════════ -->
+<div class="page active" id="page-home">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge"><div class="badge-dot"></div>AI-Powered Career Intelligence × Peer Skill Exchange</div>
+      <h1 class="hero-title">
+        The <span class="hl1">Complete</span><br>
+        Career Growth<br>
+        <span class="hl2">Platform.</span>
+      </h1>
+      <p class="hero-desc">
+        SkillBridge combines AI-powered skill gap analysis with peer-to-peer skill swapping.
+        Map where you're missing skills, get a 30-day roadmap, then swap with peers who can teach you — for free.
+      </p>
+      <div class="hero-btns">
+        <a href="#" class="btn-primary btn-large" onclick="showPage('demo');return false;">🔍 Analyze My Skills</a>
+        <a href="#" class="btn-secondary btn-large" onclick="showPage('explore');return false;">⇄ Explore Swaps →</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><div class="stat-num">16+</div><div class="stat-label">Career Domains</div></div>
+        <div class="stat-item"><div class="stat-num">12K+</div><div class="stat-label">Active Students</div></div>
+        <div class="stat-item"><div class="stat-num">AI</div><div class="stat-label">Claude Powered</div></div>
+        <div class="stat-item"><div class="stat-num">Free</div><div class="stat-label">Always</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="floating-tag ftag1"><div class="ftag-icon" style="background:rgba(0,212,200,0.1);">✅</div><span style="color:var(--accent);">Match: React.js 92%</span></div>
+      <div class="floating-tag ftag2"><div class="ftag-icon" style="background:rgba(248,113,113,0.1);">📚</div><span>Gap: Docker 30%</span></div>
+      <div class="floating-tag ftag3"><div class="ftag-icon" style="background:rgba(14,165,234,0.1);">⇄</div><span style="color:var(--accent2);">94% Swap Match</span></div>
+      <div class="hero-card">
+        <div class="card-header"><div class="card-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><div class="card-title-bar">skillbridge — analysis.json</div></div>
+        <div style="font-size:0.78rem;color:var(--muted2);margin-bottom:1rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;">Skill Match Analysis</div>
+        <div class="skill-match-row"><div class="skill-name">React.js</div><div class="skill-bar-track"><div class="skill-bar-fill" style="--w:92%;width:92%;background:var(--accent);"></div></div><div class="skill-pct" style="color:var(--accent);">92%</div></div>
+        <div class="skill-match-row"><div class="skill-name">TypeScript</div><div class="skill-bar-track"><div class="skill-bar-fill" style="--w:65%;width:65%;background:var(--gold);"></div></div><div class="skill-pct" style="color:var(--gold);">65%</div></div>
+        <div class="skill-match-row"><div class="skill-name">SQL</div><div class="skill-bar-track"><div class="skill-bar-fill" style="--w:78%;width:78%;background:var(--accent);"></div></div><div class="skill-pct" style="color:var(--accent);">78%</div></div>
+        <div class="skill-match-row"><div class="skill-name">Docker</div><div class="skill-bar-track"><div class="skill-bar-fill" style="--w:30%;width:30%;background:var(--danger);"></div></div><div class="skill-pct" style="color:var(--danger);">30%</div></div>
+        <div class="gap-score-box"><div><div class="gap-score-label">Overall Match Score</div><div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">Based on job requirements</div></div><div class="gap-score-val">74%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two Platforms Cards -->
+  <div style="padding:0 2rem 5rem;max-width:1160px;margin:0 auto;">
+    <div class="grad-sep"></div>
+    <div class="section-tag" style="margin-bottom:1rem;">Two powerful platforms, one goal</div>
+    <div class="mini-cards-grid" style="grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:3rem;">
+      <div class="step-card reveal platform-launch-card" style="cursor:pointer;border-color:rgba(0,212,200,0.2);" onclick="switchPlatform('mapmyskills');showPage('demo');return false;">
+        <div class="step-icon">🗺</div>
+        <div class="step-title" style="font-size:1.05rem;margin-bottom:0.5rem;">MapMySkills</div>
+        <div class="step-desc">Upload your resume, paste a job description — get an AI-powered skill gap map, radar chart, and personalized 30-day roadmap. Works for 16+ career domains.</div>
+        <div style="margin-top:1rem;"><span class="feat-tag">AI Analysis</span> <span class="feat-tag">30-Day Roadmap</span> <span class="feat-tag">16 Domains</span></div>
+        <button class="btn-primary" style="margin-top:1.25rem;display:inline-flex;pointer-events:none;" tabindex="-1">Start Analyzing →</button>
+      </div>
+      <div class="step-card reveal platform-launch-card" style="cursor:pointer;border-color:rgba(124,92,252,0.2);animation-delay:0.1s;" onclick="switchPlatform('skillswap');showPage('explore');return false;">
+        <div class="step-icon">⇄</div>
+        <div class="step-title" style="font-size:1.05rem;margin-bottom:0.5rem;">SkillSwap</div>
+        <div class="step-desc">Trade skills with peers across 50+ campuses. You teach what you know, you learn what you need — zero money, pure value. AI-matched sessions.</div>
+        <div style="margin-top:1rem;"><span class="feat-tag" style="color:var(--accent3);border-color:rgba(124,92,252,0.2);background:rgba(124,92,252,0.08);">Peer-to-Peer</span> <span class="feat-tag" style="color:var(--accent3);border-color:rgba(124,92,252,0.2);background:rgba(124,92,252,0.08);">Zero Cost</span></div>
+        <button class="btn-primary" style="margin-top:1.25rem;display:inline-flex;background:linear-gradient(135deg,var(--accent3),var(--accent2));pointer-events:none;" tabindex="-1">Explore Swaps →</button>
+      </div>
+    </div>
+
+    <!-- How it works together -->
+    <div class="section-tag" style="margin-bottom:1rem;">Designed to work together</div>
+    <div class="mini-cards-grid">
+      <div class="step-card reveal"><div class="step-num">01</div><div class="step-icon">📄</div><div class="step-title">Analyze Your Resume</div><div class="step-desc">MapMySkills identifies exactly which skills you're missing for your target role using Claude AI.</div></div>
+      <div class="step-card reveal" style="animation-delay:0.1s;"><div class="step-num">02</div><div class="step-icon">🎯</div><div class="step-title">See Your Gaps</div><div class="step-desc">A visual radar chart + priority skill list shows what to learn next. No more guesswork.</div></div>
+      <div class="step-card reveal" style="animation-delay:0.2s;"><div class="step-num">03</div><div class="step-icon">⇄</div><div class="step-title">Find a Swap Partner</div><div class="step-desc">SkillSwap's AI matching finds someone who can teach you exactly what you're missing.</div></div>
+      <div class="step-card reveal" style="animation-delay:0.3s;"><div class="step-num">04</div><div class="step-icon">🚀</div><div class="step-title">Grow Together</div><div class="step-desc">Close your skill gaps through real peer sessions. Track progress. Land your dream role.</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ PAGE: FEATURES ════════════════════ -->
+<div class="page" id="page-features">
+  <div class="section">
+    <div class="section-tag">⚡ Features</div>
+    <h2 class="section-title">Everything you need to<br>close your career gap</h2>
+    <p class="section-sub">SkillBridge combines resume parsing, AI gap analysis, visual skill mapping, and peer-to-peer skill exchange — all in one platform built for Indian students.</p>
+    <div class="features-grid">
+      <div class="feat-card featured reveal">
+        <div class="feat-icon">🎯</div>
+        <div>
+          <div class="feat-title">Domain-Locked AI Analysis</div>
+          <div class="feat-desc">Choose your career domain — Graphic Design, Cybersecurity, Law, Medicine — and every insight, skill gap, roadmap, and certification is laser-focused on that domain. No more generic tech advice when you're targeting a creative role.</div>
+          <div class="feat-tags"><span class="feat-tag">16 Domains</span><span class="feat-tag">Domain-Specific AI</span><span class="feat-tag">Claude API</span></div>
+        </div>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">⇄</div>
+        <div>
+          <div class="feat-title">Peer Skill Exchange</div>
+          <div class="feat-desc">Trade your strengths for skills you need. SkillSwap's AI matching engine finds students whose teaching aligns perfectly with your learning gaps — zero cost, zero friction.</div>
+          <div class="feat-tags"><span class="feat-tag">AI Matching</span><span class="feat-tag">50+ Campuses</span></div>
+        </div>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">📊</div>
+        <div>
+          <div class="feat-title">Interactive Radar Chart</div>
+          <div class="feat-desc">A canvas-rendered hexagonal radar shows your skill profile vs. job requirements — domain-specific axes, not generic bars. See exactly where you stand.</div>
+          <div class="feat-tags"><span class="feat-tag">Canvas API</span><span class="feat-tag">Domain Axes</span></div>
+        </div>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">🗺</div>
+        <div>
+          <div class="feat-title">30-Day AI Roadmap</div>
+          <div class="feat-desc">Personalized week-by-week plan with resources, projects, and tasks tailored to close your specific gaps in your specific domain.</div>
+          <div class="feat-tags"><span class="feat-tag">Week-by-Week</span><span class="feat-tag">Domain-Specific</span></div>
+        </div>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">📄</div>
+        <div>
+          <div class="feat-title">PDF Resume Parser</div>
+          <div class="feat-desc">Upload your resume in PDF format. Instantly extracts skills, experience, education, and projects using PDF.js + Claude AI. Or paste text directly.</div>
+          <div class="feat-tags"><span class="feat-tag">PDF.js</span><span class="feat-tag">Drag & Drop</span></div>
+        </div>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">🌐</div>
+        <div>
+          <div class="feat-title">Full HTML Reports</div>
+          <div class="feat-desc">Click "Open Report" to get a beautiful full-page website with your complete analysis, radar chart, salary range, certifications, and 30-day roadmap. Download as HTML.</div>
+          <div class="feat-tags"><span class="feat-tag">HTML Export</span><span class="feat-tag">Print-Ready</span></div>
+        </div>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">🧠</div>
+        <div>
+          <div class="feat-title">What-If Skill Simulator</div>
+          <div class="feat-desc">Curious what adding Docker or Figma to your skillset does? Run the simulator to see your projected score jump before committing to learning it.</div>
+          <div class="feat-tags"><span class="feat-tag">Scenario Planning</span></div>
+        </div>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">🔗</div>
+        <div>
+          <div class="feat-title">Shareable Profile Links</div>
+          <div class="feat-desc">Share your SkillBridge profile with a unique encoded URL. Anyone with the link can view your name, university, skills offered, learning goals, and bio — great for LinkedIn or WhatsApp sharing.</div>
+          <div class="feat-tags"><span class="feat-tag">URL Sharing</span><span class="feat-tag">Public Profile</span></div>
+        </div>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">🔊</div>
+        <div>
+          <div class="feat-title">Audio Summary (TTS)</div>
+          <div class="feat-desc">Listen to your AI summary read aloud using the browser's speech synthesis API — great for accessibility and on-the-go learning.</div>
+          <div class="feat-tags"><span class="feat-tag">Accessibility</span><span class="feat-tag">TTS</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ PAGE: CAREER DOMAINS ════════════════════ -->
+<div class="page" id="page-jobs">
+  <div class="section">
+    <div class="section-tag">🎯 Career Domains</div>
+    <h2 class="section-title">16 Career Domains,<br>All Analyzed Separately</h2>
+    <p class="section-sub">Click any domain to start your analysis. Each has its own skill axes, gap criteria, certifications, and salary data specific to India.</p>
+    <div class="mini-cards-grid" id="jobsDomainGrid"></div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ PAGE: DEMO / ANALYZER ════════════════════ -->
+<div class="page" id="page-demo">
+  <div class="demo-wrap">
+    <div class="section-tag" style="margin-bottom:1rem;">🗺 MapMySkills — AI Gap Analyzer</div>
+    <h2 style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;margin-bottom:0.5rem;">Analyze Your Skill Gaps</h2>
+    <p style="color:var(--muted2);font-size:0.88rem;margin-bottom:1.5rem;">Upload your resume + job description → get AI-powered gap analysis in 30 seconds</p>
+
+    <div class="demo-tab-bar">
+      <button class="demo-tab active" data-tab="input" onclick="switchTab('input')">📝 Input</button>
+      <button class="demo-tab" data-tab="results" onclick="switchTab('results')">📊 Results</button>
+    </div>
+
+    <!-- INPUT PANEL -->
+    <div class="demo-panel active" id="panel-input">
+
+      <!-- Domain Selector -->
+      <div class="input-section">
+        <div class="input-section-header">
+          <div class="input-section-title"><span class="iss-num">1</span><span>Select Career Domain</span></div>
+          <div class="domain-lock-hint" id="domainLockHint">🔒 Lock your domain first for domain-specific analysis</div>
+        </div>
+        <div class="domain-detected-bar" id="domainDetectedBar">
+          <span id="domainDetectedText">🤖 Domain will auto-detect from your JD</span>
+          <button onclick="userManuallySelectedDomain=false;resetDomainSelection();" class="domain-reset-btn">↺ Auto</button>
+        </div>
+        <div class="job-select-grid" id="jobSelectGrid"></div>
+      </div>
+
+      <!-- Resume Input -->
+      <div class="input-section">
+        <div class="input-section-header">
+          <div class="input-section-title"><span class="iss-num">2</span><span>Your Resume</span></div>
+          <div class="resume-tabs">
+            <button class="resume-tab-btn active" data-rtab="paste" onclick="switchResumeTab('paste')">📝 Paste Text</button>
+            <button class="resume-tab-btn" data-rtab="upload" onclick="switchResumeTab('upload')">📄 Upload PDF</button>
+          </div>
+        </div>
+        <div id="resumePasteArea">
+          <div class="textarea-wrap">
+            <textarea id="resumeTextArea" class="main-textarea" placeholder="Paste your full resume here — include skills, experience, education, and projects…" rows="8" oninput="resumeText=this.value"></textarea>
+            <div class="textarea-toolbar">
+              <span class="char-count" id="resumeCharCount">0 chars</span>
+              <button class="tb-btn" onclick="copyResumeText()">📋 Copy</button>
+              <button class="tb-btn" onclick="document.getElementById('resumeTextArea').value='';resumeText='';showNotif('🗑️','Cleared.')">✕ Clear</button>
+            </div>
+          </div>
+        </div>
+        <div id="resumeUploadArea" style="display:none;">
+          <div class="pdf-drop-zone" id="pdfDropZone" onclick="document.getElementById('pdfFileInput').click()">
+            <div class="pdf-dz-icon">📄</div>
+            <div class="pdf-dz-title">Drop your PDF resume here</div>
+            <div class="pdf-dz-sub">or click to browse — max 10 pages</div>
+            <input type="file" id="pdfFileInput" accept="application/pdf" style="display:none;" onchange="handlePdfUpload(this.files[0])">
+          </div>
+          <div class="pdf-status" id="pdfStatus">No file selected yet</div>
+        </div>
+      </div>
+
+      <!-- Job Description -->
+      <div class="input-section">
+        <div class="input-section-header">
+          <div class="input-section-title"><span class="iss-num">3</span><span>Job Description</span></div>
+        </div>
+        <div class="textarea-wrap">
+          <textarea id="jobDescArea" class="main-textarea" placeholder="Paste the full job description here. The more detail, the better the analysis…" rows="7"></textarea>
+          <div class="textarea-toolbar">
+            <span class="char-count" id="jdCharCount">0 chars</span>
+            <button class="tb-btn" onclick="document.getElementById('jobDescArea').value='';resetDomainSelection();showNotif('🗑️','Cleared.')">✕ Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GitHub (optional) -->
+      <div class="input-section input-section-compact">
+        <div class="input-section-title" style="margin-bottom:0.75rem;"><span class="iss-num opt">4</span><span>GitHub Profile <span style="color:var(--muted);font-weight:400;font-size:0.78rem;">(optional)</span></span></div>
+        <input type="text" id="githubInput" class="main-input" placeholder="github.com/yourusername or just yourusername">
+      </div>
+
+
+      <!-- API Key Input -->
+      <div class="api-key-row" id="apiKeyRow">
+        <div class="api-key-wrap">
+          <span class="api-key-icon">🔑</span>
+          <input type="password" id="anthropicApiKey" class="api-key-input" placeholder="Enter your Anthropic API key (sk-ant-...)" autocomplete="off" oninput="saveApiKey(this.value)" />
+          <button class="tb-btn" onclick="toggleApiKeyVisibility()" id="apiKeyToggleBtn" title="Show/Hide key">👁</button>
+          <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="api-key-link" title="Get your API key">Get Key →</a>
+        </div>
+        <div class="api-key-hint">Your key is stored locally and never sent anywhere except Anthropic's API.</div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="analyze-btn-row">
+        <button class="btn-primary btn-large" id="analyzeBtn" onclick="analyzeSkills()">🔍 Analyze My Skills →</button>
+        <button class="btn-secondary" onclick="loadSampleData()">📋 Load Sample</button>
+        <button class="btn-ghost" onclick="clearForm()">🗑️ Clear All</button>
+      </div>
+    </div>
+
+    <!-- RESULTS PANEL -->
+    <div class="demo-panel" id="panel-results">
+      <div class="ai-loading" id="aiLoading">
+        <div class="ai-loading-spinner"></div>
+        <div class="ai-loading-title">🤖 AI is analyzing your profile…</div>
+        <div class="ai-loading-step" id="aiLoadingStep">Reading your resume…</div>
+        <div class="ai-loading-sub">This usually takes 10–20 seconds</div>
+      </div>
+      <div id="resultsContent">
+        <div class="results-empty">
+          <div class="results-empty-icon">📊</div>
+          <div class="results-empty-title">Your analysis will appear here</div>
+          <div class="results-empty-sub">Select a domain, paste your resume & JD, then click Analyze.</div>
+          <button class="btn-primary" onclick="switchTab('input')">← Go to Input</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ PAGE: EXPLORE (SkillSwap) ════════════════════ -->
+<div class="page" id="page-explore">
+  <div class="explore-section">
+    <div class="section-tag">⇄ SkillSwap — Explore</div>
+    <h2 class="section-title">Find Your Perfect<br>Swap Partner</h2>
+    <p class="section-sub">Browse 340+ skills across 50+ campuses. Connect with students who teach what you need and need what you teach.</p>
+
+    <input type="text" class="explore-search" id="exploreSearch" placeholder="🔍 Search skills, people, universities…" oninput="searchSkills(this.value)">
+
+    <div class="explore-filters">
+      <button class="filter-tab active" onclick="filterExplore('all')">All Skills</button>
+      <button class="filter-tab" onclick="filterExplore('tech')">💻 Tech</button>
+      <button class="filter-tab" onclick="filterExplore('design')">🎨 Design</button>
+      <button class="filter-tab" onclick="filterExplore('music')">🎵 Music</button>
+      <button class="filter-tab" onclick="filterExplore('language')">🌐 Language</button>
+      <button class="filter-tab" onclick="filterExplore('math')">📐 Math/Science</button>
+      <button class="filter-tab" onclick="filterExplore('business')">💼 Business</button>
+    </div>
+
+    <div class="explore-grid">
+      <!-- Cards generated by JS -->
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ PAGE: DASHBOARD ════════════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="dashboard-section">
+    <div class="section-tag">📊 Dashboard</div>
+    <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;margin-bottom:2rem;">Welcome back, <span id="dashWelcomeName" style="color:var(--accent);">Student</span> 👋</h2>
+    <div class="dashboard-grid">
+      <!-- Profile sidebar -->
+      <div>
+        <div class="dash-profile-card">
+          <div class="dash-avatar" id="dashAvatar">👩‍💻</div>
+          <div class="dash-name" id="dashName">Your Name</div>
+          <div class="dash-uni" id="dashUni">University · Department · Year</div>
+          <div id="streak-pill" style="margin:0.4rem auto 0;"></div>
+          <div class="dash-stats">
+            <div class="dash-stat"><div class="dash-stat-val" style="color:var(--accent);">12</div><div class="dash-stat-label">Sessions</div></div>
+            <div class="dash-stat"><div class="dash-stat-val" style="color:var(--green);">4.9⭐</div><div class="dash-stat-label">Rating</div></div>
+            <div class="dash-stat"><div class="dash-stat-val" style="color:var(--gold);">7</div><div class="dash-stat-label">Connections</div></div>
+            <div class="dash-stat"><div class="dash-stat-val" style="color:var(--accent3);">3</div><div class="dash-stat-label">Badges</div></div>
+          </div>
+          <div class="dash-actions">
+            <button class="btn-primary" style="width:100%;" onclick="openEditProfile()">✏️ Edit Profile</button>
+            <button class="btn-secondary" style="width:100%;" onclick="showPage('demo')">🔍 Analyze Skills</button>
+            <button class="btn-ghost" style="width:100%;" onclick="shareProfile()">🔗 Share Profile</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main dashboard -->
+      <div class="dash-main">
+        <!-- Activity -->
+        <div class="dash-card">
+          <div class="dash-card-title">📈 Skill Progress This Month</div>
+          <div class="activity-bar-row"><div class="activity-bar-label">React</div><div class="activity-bar-track"><div class="activity-bar-fill" data-width="78%" style="width:0"></div></div><div class="activity-bar-val">78%</div></div>
+          <div class="activity-bar-row"><div class="activity-bar-label">Python</div><div class="activity-bar-track"><div class="activity-bar-fill" data-width="92%" style="width:0;background:var(--green);"></div></div><div class="activity-bar-val" style="color:var(--green);">92%</div></div>
+          <div class="activity-bar-row"><div class="activity-bar-label">Design</div><div class="activity-bar-track"><div class="activity-bar-fill" data-width="55%" style="width:0;background:var(--accent3);"></div></div><div class="activity-bar-val" style="color:var(--accent3);">55%</div></div>
+          <div class="activity-bar-row"><div class="activity-bar-label">SQL</div><div class="activity-bar-track"><div class="activity-bar-fill" data-width="63%" style="width:0;background:var(--gold);"></div></div><div class="activity-bar-val" style="color:var(--gold);">63%</div></div>
+        </div>
+
+        <!-- AI Matches -->
+        <div class="dash-card">
+          <div class="dash-card-title">🤖 AI-Matched Swap Partners</div>
+          <div class="match-card" onclick="openProfileModal('Priya Sharma','IIT Madras','👩‍💻',['Python','ML','TensorFlow'],['Guitar','Spanish','UI Design'],'94%')">
+            <div class="match-avatar">👩‍💻</div>
+            <div class="match-info"><div class="match-name">Priya Sharma</div><div class="match-skills">Teaches: Python, ML · Wants: Guitar, Spanish</div></div>
+            <div class="match-pct">94%</div>
+          </div>
+          <div class="match-card" onclick="openProfileModal('Arjun Nair','NIT Trichy','👨‍💻',['React','TypeScript','Node.js'],['Violin','Sketch','Photography'],'87%')">
+            <div class="match-avatar">👨‍💻</div>
+            <div class="match-info"><div class="match-name">Arjun Nair</div><div class="match-skills">Teaches: React, TypeScript · Wants: Violin, Photography</div></div>
+            <div class="match-pct">87%</div>
+          </div>
+          <div class="match-card" onclick="openProfileModal('Meera Reddy','BITS Pilani','👩‍🎨',['Figma','Illustrator','UI Design'],['Python','Data Analysis','SQL'],'81%')">
+            <div class="match-avatar">👩‍🎨</div>
+            <div class="match-info"><div class="match-name">Meera Reddy</div><div class="match-skills">Teaches: Figma, UI Design · Wants: Python, Data</div></div>
+            <div class="match-pct">81%</div>
+          </div>
+        </div>
+
+        <!-- Upcoming Sessions -->
+        <div class="dash-card">
+          <div class="dash-card-title">📅 Sessions</div>
+          <div class="session-card">
+            <div class="session-top"><div class="session-title">React.js Deep Dive</div><span class="session-badge upcoming">Upcoming</span></div>
+            <div class="session-meta">With Arjun Nair · Tomorrow 3:00 PM · Video Call</div>
+          </div>
+          <div class="session-card">
+            <div class="session-top"><div class="session-title">Guitar Basics — Session 3</div><span class="session-badge completed">Completed</span></div>
+            <div class="session-meta">With Ravi Kumar · Yesterday 5:00 PM · ⭐⭐⭐⭐⭐</div>
+          </div>
+          <div class="session-card">
+            <div class="session-top"><div class="session-title">Python Data Wrangling</div><span class="session-badge upcoming">Upcoming</span></div>
+            <div class="session-meta">With Priya Sharma · Friday 11:00 AM · Video Call</div>
+          </div>
+          <button class="btn-secondary" style="width:100%;margin-top:12px;" onclick="openScheduleModal()">+ Book New Session</button>
+        </div>
+
+        <!-- Learning Streak & Gamification -->
+        <div class="dash-card" id="streak-widget">
+          <!-- Rendered by streak-gamification.js -->
+        </div>
+
+        <!-- Quick analyze -->
+        <div class="dash-card" style="background:linear-gradient(135deg,rgba(0,212,200,0.05),rgba(14,165,240,0.04));border-color:rgba(0,212,200,0.15);">
+          <div class="dash-card-title" style="color:var(--accent);">🗺 Quick Skill Gap Analysis</div>
+          <p style="font-size:0.82rem;color:var(--muted2);margin-bottom:1rem;">Know your gaps before your next swap session. Get a personalized roadmap in 30 seconds.</p>
+          <button class="btn-primary" onclick="showPage('demo')">🔍 Analyze My Skills →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ PAGE: PROFILE ════════════════════ -->
+<div class="page" id="page-profile">
+  <div class="profile-section">
+    <div class="section-tag">👤 My Profile</div>
+    <div class="profile-header">
+      <div class="profile-main-avatar" id="profile-main-avatar">👩‍💻</div>
+      <div class="profile-info-main">
+        <div class="profile-display-name" id="profile-display-name">Your Name</div>
+        <div class="profile-display-uni" id="profile-display-uni">University · Department · Year</div>
+        <div id="profile-display-email" style="font-size:0.8rem;color:var(--muted2);margin-top:4px;"></div>
+        <div id="profile-display-phone" style="font-size:0.8rem;color:var(--muted2);margin-top:2px;"></div>
+        <div id="profile-joined-date" style="font-size:0.78rem;color:var(--muted);margin-top:2px;"></div>
+        <div id="profile-display-bio" style="font-size:0.85rem;color:var(--muted2);margin-top:10px;line-height:1.7;max-width:440px;font-style:italic;"></div>
+        <div class="profile-badges" style="margin-top:12px;">
+          <span class="profile-badge">✓ Verified Student</span>
+          <span class="profile-badge" style="background:rgba(245,183,49,0.08);border-color:rgba(245,183,49,0.2);color:var(--gold);">⭐ Top Rated</span>
+          <span class="profile-badge" style="background:rgba(124,92,252,0.08);border-color:rgba(124,92,252,0.2);color:var(--accent3);">🚀 Active Swapper</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+        <button class="btn-primary" onclick="openEditProfile()">✏️ Edit Profile</button>
+        <button class="btn-secondary" onclick="openShareProfile()">🔗 Share Profile</button>
+      </div>
+    </div>
+
+    <!-- Share Link Box -->
+    <div id="profile-share-link-box" style="background:rgba(0,212,200,0.06);border:1px solid rgba(0,212,200,0.2);border-radius:12px;padding:14px 16px;margin:0 0 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:1rem;">🔗</span>
+      <input id="profile-share-url" type="text" readonly style="flex:1;background:none;border:none;outline:none;color:var(--accent);font-size:0.76rem;min-width:0;font-family:var(--font-mono,monospace);" placeholder="Your shareable profile link will appear here">
+      <button class="btn-primary" style="padding:6px 14px;font-size:0.75rem;white-space:nowrap;" onclick="copyProfileUrl()">📋 Copy Link</button>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;color:var(--accent);" id="profile-stat-sessions">0</div>
+        <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Sessions</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;color:var(--gold);" id="profile-stat-rating">4.9⭐</div>
+        <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Rating</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;color:var(--green);" id="profile-stat-connections">0</div>
+        <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Connections</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-family:var(--font-head);font-size:1.6rem;font-weight:800;color:var(--accent3);" id="profile-stat-badges">1</div>
+        <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Badges</div>
+      </div>
+    </div>
+
+    <div class="profile-skills-section">
+      <div class="profile-skills-label">🎓 Skills I Offer</div>
+      <div class="skills-list" id="profile-skills-offer">
+        <span class="skill-chip">Python</span><span class="skill-chip">React</span><span class="skill-chip">Machine Learning</span>
+      </div>
+    </div>
+    <div class="profile-skills-section">
+      <div class="profile-skills-label">🎯 Skills I Want to Learn</div>
+      <div class="skills-list" id="profile-skills-want">
+        <span class="skill-chip want">Guitar</span><span class="skill-chip want">UI Design</span><span class="skill-chip want">Spanish</span>
+      </div>
+    </div>
+
+    <div class="profile-skills-section">
+      <div class="profile-skills-label">Quick Actions</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
+        <button class="btn-primary" onclick="showPage('demo')">🔍 Analyze My Skills</button>
+        <button class="btn-secondary" onclick="showPage('explore')">⇄ Find Swap Partners</button>
+        <button class="btn-ghost" onclick="showPage('dashboard')">📊 View Dashboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ PAGE: TEAM ════════════════════ -->
+<div class="page" id="page-team">
+  <div class="section">
+    <div class="section-tag">👩‍💻 Team</div>
+    <h2 class="section-title">Built by Students,<br>for Every Student</h2>
+    <p class="section-sub">SkillBridge was built with ❤️ by Bhargavi N — proving that one determined CSE student with AI and caffeine can build something genuinely useful.</p>
+    <div class="team-grid team-grid-solo">
+      <div class="team-card reveal">
+        <div class="team-avatar">👩‍💻</div>
+        <div class="team-name">Bhargavi N</div>
+        <div class="team-role">Founder & Full-Stack Developer</div>
+        <div class="team-dept">B.E. Computer Science · First Year · SRM Institute</div>
+        <div class="team-bio">Built SkillBridge (formerly MapMySkills + SkillSwap) to solve a real problem — students struggle to understand what skills they're missing for their dream careers, and then don't know who can teach them. Passionate about AI, web development, and making tech accessible.</div>
+        <div class="team-skills-chips"><span>Claude AI</span><span>React</span><span>Node.js</span><span>UI/UX</span><span>Python</span></div>
+        <div class="team-links">
+          <a href="https://www.linkedin.com/in/bhargavi-nagaraj-967811381" target="_blank" rel="noopener" class="team-link linkedin">🔗 LinkedIn</a>
+          <a href="https://github.com/bhargavi2048-boop" target="_blank" rel="noopener" class="team-link github">🐙 GitHub</a>
+          <a href="mailto:bhargavi2048@gmail.com" class="team-link email">📧 Email</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="mission-box reveal">
+      <div style="font-size:2.5rem;margin-bottom:1rem;">🎯</div>
+      <div style="font-family:var(--font-head);font-weight:800;font-size:1.3rem;margin-bottom:0.75rem;">Our Mission</div>
+      <p style="color:var(--muted2);max-width:560px;margin:0 auto;line-height:1.8;font-size:0.95rem;">
+        To make AI-powered career intelligence and peer skill exchange accessible to every student in India — helping them identify skill gaps, get personalized roadmaps, find swap partners, and confidently step into their dream careers.
+      </p>
+      <div style="margin-top:2rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="#" class="btn-primary" onclick="showPage('demo');return false;">🔍 Analyze My Skills</a>
+        <a href="#" class="btn-secondary" onclick="showPage('explore');return false;">⇄ Explore Swaps</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ PAGE: CONTACT ════════════════════ -->
+<div class="page" id="page-contact">
+  <div class="contact-section">
+    <div class="section-tag">📩 Get in Touch</div>
+    <h2 class="section-title">Contact Us</h2>
+    <p style="color:var(--muted2);margin-bottom:0.5rem;">Questions, mentorship requests, collaborations, or career guidance — we're here.</p>
+    <div class="contact-form">
+      <div class="form-row">
+        <div class="form-group"><label>First Name *</label><input type="text" id="firstName" placeholder="Your first name"></div>
+        <div class="form-group"><label>Last Name</label><input type="text" id="lastName" placeholder="Your last name"></div>
+      </div>
+      <div class="form-group"><label>Email *</label><input type="email" id="contactEmail" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Phone</label><input type="tel" id="contactPhone" placeholder="+91 …"></div>
+      <div class="form-group">
+        <label>Reason</label>
+        <select id="reason">
+          <option value="">Select a reason</option>
+          <option>Career Guidance</option>
+          <option>Technical Question</option>
+          <option>Mentorship</option>
+          <option>Partnership / Collaboration</option>
+          <option>Feedback</option>
+          <option>Bug Report</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Message *</label><textarea id="contactMessage" placeholder="Tell us how we can help…"></textarea></div>
+      <button class="btn-primary" id="contactSubmitBtn" onclick="submitContactForm()">Send Message 🚀</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════ MODALS ════════════════════ -->
+
+<!-- Login Modal — email only, no social logins -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box" style="max-width:440px;">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 14px;box-shadow:0 0 20px var(--glow);">🔐</div>
+      <div class="modal-title" style="margin-bottom:6px;">Welcome Back 👋</div>
+      <p style="font-size:0.82rem;color:var(--muted2);">Sign in with your registered email to continue your journey.</p>
+    </div>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group"><label>Email Address *</label><input id="login-email" type="email" placeholder="you@college.edu" required autocomplete="email"></div>
+      <div class="form-group"><label>Password *</label><input id="login-password" type="password" placeholder="Your password" required autocomplete="current-password"></div>
+      <div id="login-error" style="display:none;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:10px;padding:10px 14px;font-size:0.78rem;color:var(--danger);margin-bottom:14px;"></div>
+      <button type="submit" class="btn-primary" style="width:100%;padding:13px;font-size:0.92rem;">Sign In →</button>
+    </form>
+    <p style="text-align:center;margin-top:1.25rem;font-size:0.78rem;color:var(--muted2);">Don't have an account? <a href="#" onclick="closeModal('loginModal');openModal('signupModal');return false;" style="color:var(--accent);font-weight:600;">Create one free →</a></p>
+  </div>
+</div>
+
+<!-- Signup Modal — collects all user details -->
+<div class="modal-overlay" id="signupModal">
+  <div class="modal-box" style="max-width:520px;max-height:92vh;overflow-y:auto;">
+    <button class="modal-close" onclick="closeModal('signupModal')">✕</button>
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent3),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 14px;box-shadow:0 0 20px var(--glow2);">🚀</div>
+      <div class="modal-title" style="margin-bottom:6px;">Join SkillBridge</div>
+      <p style="font-size:0.82rem;color:var(--muted2);">Create your profile to analyze skills and connect with peers.</p>
+    </div>
+    <form onsubmit="handleSignup(event)">
+      <!-- Avatar -->
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="font-size:0.75rem;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:8px;">Pick Your Avatar</label>
+        <div id="avatar-picker" style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span class="avatar-opt selected" onclick="selectAvatar(this,'👩‍💻')">👩‍💻</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'👨‍💻')">👨‍💻</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'🎨')">🎨</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'🎸')">🎸</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'📊')">📊</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'🚀')">🚀</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'🌟')">🌟</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'💡')">💡</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'🧠')">🧠</span>
+          <span class="avatar-opt" onclick="selectAvatar(this,'🎯')">🎯</span>
+        </div>
+        <input type="hidden" id="signup-avatar" value="👩‍💻">
+      </div>
+      <!-- Name -->
+      <div class="form-row">
+        <div class="form-group"><label>First Name *</label><input id="signup-firstname" type="text" placeholder="First name" required autocomplete="given-name"></div>
+        <div class="form-group"><label>Last Name</label><input id="signup-lastname" type="text" placeholder="Last name" autocomplete="family-name"></div>
+      </div>
+      <!-- Email & Password -->
+      <div class="form-group"><label>Email *</label><input id="signup-email" type="email" placeholder="you@college.edu" required autocomplete="email"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Password *</label><input id="signup-password" type="password" placeholder="Min 6 characters" required minlength="6" autocomplete="new-password"></div>
+        <div class="form-group"><label>Confirm Password *</label><input id="signup-confirm" type="password" placeholder="Re-enter password" required autocomplete="new-password"></div>
+      </div>
+      <!-- College details -->
+      <div class="form-group"><label>University / College *</label><input id="signup-university" type="text" placeholder="SRM Institute of Science & Technology" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>Year</label><select id="signup-year"><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option><option>Postgraduate</option></select></div>
+        <div class="form-group"><label>Department</label><input id="signup-dept" type="text" placeholder="Computer Science"></div>
+      </div>
+      <div class="form-group"><label>Phone <span style="color:var(--muted);font-size:0.72rem;">(optional)</span></label><input id="signup-phone" type="tel" placeholder="+91 9876543210" autocomplete="tel"></div>
+      <!-- Skills -->
+      <div class="form-group"><label>Skills I Can Teach <span style="color:var(--muted);font-size:0.72rem;">(comma separated)</span></label><input id="signup-skills-offer" type="text" placeholder="e.g. Python, React, Guitar, Figma"></div>
+      <div class="form-group"><label>Skills I Want to Learn</label><input id="signup-skills-want" type="text" placeholder="e.g. Machine Learning, Spanish, UI Design"></div>
+      <!-- Bio -->
+      <div class="form-group"><label>Short Bio <span style="color:var(--muted);font-size:0.72rem;">(optional)</span></label><textarea id="signup-bio" rows="2" placeholder="Tell peers about yourself and your learning goals…"></textarea></div>
+      <div id="signup-error" style="display:none;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:10px;padding:10px 14px;font-size:0.78rem;color:var(--danger);margin-bottom:14px;"></div>
+      <button type="submit" class="btn-primary" style="width:100%;padding:13px;font-size:0.92rem;">Create My Profile →</button>
+    </form>
+    <p style="text-align:center;margin-top:1.25rem;font-size:0.78rem;color:var(--muted2);">Already have an account? <a href="#" onclick="closeModal('signupModal');openModal('loginModal');return false;" style="color:var(--accent);font-weight:600;">Sign in</a></p>
+  </div>
+</div>
+
+<!-- What-If Modal -->
+<div class="modal-overlay" id="whatifModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('whatifModal')">✕</button>
+    <div class="modal-title">🧠 What-If Skill Simulator</div>
+    <p style="font-size:0.82rem;color:var(--muted2);margin-bottom:1.25rem;">Add a new skill to see how much your match score would improve.</p>
+    <input type="text" class="modal-input" id="whatifSkill" placeholder="Add a skill (e.g., Docker, Figma, Splunk…)">
+    <button class="btn-primary" onclick="runWhatIf()" style="width:100%;">Simulate Impact</button>
+    <div class="modal-result" id="whatifResult"></div>
+  </div>
+</div>
+
+<!-- Company Match Modal -->
+<div class="modal-overlay" id="companyModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('companyModal')">✕</button>
+    <div class="modal-title">🔍 Company Match Check</div>
+    <p style="font-size:0.82rem;color:var(--muted2);margin-bottom:1.25rem;">Check how well your profile matches a specific company's hiring bar.</p>
+    <input type="text" class="modal-input" id="companyInput" placeholder="Company name (e.g., Google, TCS, Infosys…)">
+    <button class="btn-primary" onclick="runCompanyMatch()" style="width:100%;">Check Match</button>
+    <div class="modal-result" id="companyResult"></div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal-overlay" id="shareModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('shareModal')">✕</button>
+    <div class="modal-title">🔗 Share Your Profile</div>
+    <p style="font-size:0.82rem;color:var(--muted2);margin-bottom:1.25rem;">Share your SkillBridge profile. Anyone with this link can view your skills, offers, and swap availability.</p>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:1.1rem;">🌐</span>
+      <input id="shareProfileUrl" type="text" readonly style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:0.82rem;font-family:var(--font-mono,monospace);" value="">
+      <button class="btn-primary" style="padding:6px 14px;font-size:0.78rem;white-space:nowrap;" onclick="copyShareUrl()">📋 Copy</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-ghost" style="flex:1;font-size:0.78rem;" onclick="shareToWhatsApp()">📱 WhatsApp</button>
+      <button class="btn-ghost" style="flex:1;font-size:0.78rem;" onclick="shareToLinkedIn()">🔗 LinkedIn</button>
+      <button class="btn-ghost" style="flex:1;font-size:0.78rem;" onclick="shareToTwitter()">🐦 Twitter</button>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(0,212,200,0.06);border:1px solid rgba(0,212,200,0.15);border-radius:10px;font-size:0.75rem;color:var(--muted2);">
+      ℹ️ Anyone with this link can view your public profile — name, university, skills you offer, and skills you want to learn.
+    </div>
+  </div>
+</div>
+
+<!-- Shared Profile View Modal -->
+<div class="modal-overlay" id="sharedProfileModal">
+  <div class="modal-box" style="max-width:500px;">
+    <button class="modal-close" onclick="closeModal('sharedProfileModal')">✕</button>
+    <div id="sharedProfileContent"></div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+  <span class="notif-icon" id="notifIcon">✅</span>
+  <span id="notifText">Done!</span>
+</div>
+
+
+<!-- ════════════════════ SCRIPTS ════════════════════ -->
+<script src="js/job-profiles.js"></script>
+<script src="js/report-generator.js"></script>
+<script src="js/skillswap.js"></script>
+<script src="js/mapmyskills-app.js"></script>
+<script src="js/user-profile.js"></script>
+<script src="js/platform.js"></script>
+<script src="js/streak-gamification.js"></script>
+
+<script>
+/* ─── JOBS PAGE ─── */
+function renderJobsDomainPage() {
+  const grid = document.getElementById('jobsDomainGrid');
+  if (!grid || typeof JOB_PROFILES === 'undefined') return;
+  grid.innerHTML = Object.entries(JOB_PROFILES).map(([key, profile]) => `
+    <div class="step-card reveal" onclick="showPage('demo');selectJobProfile('${key}',true);" style="cursor:pointer;text-align:left;">
+      <div style="font-size:2rem;margin-bottom:0.75rem;">${profile.icon}</div>
+      <div style="font-family:var(--font-head);font-weight:700;font-size:0.9rem;margin-bottom:4px;">${profile.label}</div>
+      <div style="font-size:0.7rem;color:var(--accent);margin-bottom:0.5rem;font-weight:600;">${profile.domain}</div>
+      <div style="font-size:0.72rem;color:var(--muted2);line-height:1.5;">${profile.coreSkills.slice(0,4).join(' · ')}</div>
+      <div style="margin-top:0.75rem;font-size:0.68rem;color:var(--muted);">${profile.roles.slice(0,2).join(' / ')}</div>
+    </div>`).join('');
+  if (typeof observeReveal === 'function') observeReveal();
+}
+
+/* ─── EXPLORE CARDS ─── */
+const EXPLORE_PEOPLE = [
+  { name:'Priya Sharma', school:'IIT Madras · CSE', emoji:'👩‍💻', tags:'tech', offers:['Python','Machine Learning','TensorFlow'], wants:['Guitar','Spanish','UI Design'], rating:4.9, match:94 },
+  { name:'Arjun Nair', school:'NIT Trichy · IT', emoji:'👨‍💻', tags:'tech', offers:['React','TypeScript','Node.js'], wants:['Violin','Photography','Figma'], rating:4.7, match:87 },
+  { name:'Meera Reddy', school:'BITS Pilani · Design', emoji:'👩‍🎨', tags:'design', offers:['Figma','Illustrator','Adobe XD'], wants:['Python','Data Analysis','SQL'], rating:4.8, match:82 },
+  { name:'Rahul Gupta', school:'VIT Chennai · CSE', emoji:'🎸', tags:'music', offers:['Guitar','Music Theory','Piano'], wants:['React','Web Dev','JavaScript'], rating:4.6, match:78 },
+  { name:'Aisha Khan', school:'SRM Institute · MBA', emoji:'💼', tags:'business', offers:['Excel','Business Analysis','PPT'], wants:['Python','Data','Tableau'], rating:4.9, match:91 },
+  { name:'Dev Patel', school:'SASTRA University · Maths', emoji:'📐', tags:'math', offers:['Calculus','Statistics','Linear Algebra'], wants:['Guitar','Art','Design'], rating:4.5, match:73 },
+  { name:'Sneha Iyer', school:'Amrita College · CS', emoji:'🌐', tags:'language', offers:['French','Spanish','German'], wants:['Python','ML','Data Science'], rating:4.8, match:86 },
+  { name:'Karan Singh', school:'Manipal University · ECE', emoji:'🤖', tags:'tech', offers:['Arduino','Raspberry Pi','IoT'], wants:['UI Design','Figma','Branding'], rating:4.7, match:80 },
+  { name:'Lakshmi Prasad', school:'NIT Warangal · Civil', emoji:'🏗️', tags:'math', offers:['AutoCAD','STAAD.Pro','Surveying'], wants:['MS Excel','PPT','Business Writing'], rating:4.6, match:75 },
+  { name:'Rohit Verma', school:'IIIT Hyderabad · CS', emoji:'📊', tags:'tech', offers:['SQL','Tableau','Power BI'], wants:['Guitar','Music Production','Drums'], rating:4.9, match:92 },
+  { name:'Pooja Menon', school:'Amrita · Fine Arts', emoji:'🎨', tags:'design', offers:['Oil Painting','Watercolor','Sketching'], wants:['Python','AI Art','Photoshop'], rating:4.7, match:77 },
+  { name:'Vikram Bhat', school:'RV College · CS', emoji:'🎵', tags:'music', offers:['Carnatic Violin','Tabla','Classical Music'], wants:['React','Full Stack','APIs'], rating:4.5, match:69 },
+];
+
+function renderExploreCards() {
+  const grid = document.querySelector('.explore-grid');
+  if (!grid) return;
+  grid.innerHTML = EXPLORE_PEOPLE.map(p => `
+    <div class="explore-card reveal" data-tags="${p.tags}">
+      <div class="exp-avatar" style="background:linear-gradient(135deg,rgba(0,212,200,0.12),rgba(124,92,252,0.08));">${p.emoji}</div>
+      <div class="exp-name">${p.name}</div>
+      <div class="exp-school">${p.school}</div>
+      <div style="font-size:0.68rem;color:var(--muted2);margin-bottom:6px;">📚 Offers:</div>
+      <div class="exp-skills">${p.offers.map(s=>`<span class="skill-chip">${s}</span>`).join('')}</div>
+      <div style="font-size:0.68rem;color:var(--muted2);margin-bottom:6px;margin-top:6px;">🎯 Wants:</div>
+      <div class="exp-skills">${p.wants.slice(0,2).map(s=>`<span class="skill-chip want">${s}</span>`).join('')}</div>
+      <div class="exp-rating">⭐ ${p.rating} · 15+ sessions</div>
+      <div class="exp-match">${p.match}% Match</div>
+      <div class="exp-actions">
+        <button class="btn-primary" style="flex:1;font-size:0.78rem;padding:8px;" onclick="if(!isLoggedIn){showToast('Please log in to connect 🔐','warning');openModal('loginModal');}else{openProfileModal('${p.name}','${p.school}','${p.emoji}',${JSON.stringify(p.offers)},${JSON.stringify(p.wants)},'${p.match}%');}">View Profile</button>
+        <button class="btn-ghost" style="font-size:0.78rem;padding:8px;" onclick="connectUser(this,'${p.name}')">🤝 Connect</button>
+      </div>
+    </div>`).join('');
+  if (typeof observeReveal === 'function') observeReveal();
+}
+
+/* ─── DASHBOARD UPDATE ─── */
+function updateDashboard() {
+  if (!currentUserData) return;
+  const u = currentUserData;
+  const wn = document.getElementById('dashWelcomeName');
+  const dn = document.getElementById('dashName');
+  const du = document.getElementById('dashUni');
+  const da = document.getElementById('dashAvatar');
+  if (wn) wn.textContent = u.name.split(' ')[0];
+  if (dn) dn.textContent = u.name;
+  if (du) du.textContent = (u.university || '') + ' · ' + (u.department || 'Computer Science') + ' · ' + (u.year || '');
+  if (da) da.textContent = u.avatar || '👩‍💻';
+}
+
+/* ─── JD CHAR COUNT ─── */
+document.addEventListener('DOMContentLoaded', () => {
+  const jd = document.getElementById('jobDescArea');
+  const jdCount = document.getElementById('jdCharCount');
+  if (jd && jdCount) jd.addEventListener('input', () => jdCount.textContent = `${jd.value.length.toLocaleString()} chars`);
+  renderExploreCards();
+  renderJobsDomainPage();
+  triggerReveal();
+  updateSwapAuthUI();
+  // Counter observer
+  const heroObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) { animateCounters(); heroObs.disconnect(); }
+  });
+  const heroStats = document.querySelector('.hero-stats');
+  if (heroStats) heroObs.observe(heroStats);
+  // Cursor
+  document.addEventListener('mousemove', e => {
+    const g = document.getElementById('cursorGlow');
+    if (g) { g.style.left = e.clientX + 'px'; g.style.top = e.clientY + 'px'; }
+  });
+});
+
+// Override showPage
+const _origShowPage = window.showPage;
+window.showPage = function(id) {
+  if ((id === 'dashboard' || id === 'profile') && !isLoggedIn) {
+    showToast('Please log in to access this page 🔐', 'warning');
+    openModal('loginModal'); return;
+  }
+  _origShowPage(id);
+  if (id === 'jobs') renderJobsDomainPage();
+  if (id === 'explore') { renderExploreCards(); }
+  if (id === 'dashboard') { updateDashboard(); setTimeout(animateBars, 400); if (typeof refreshStreakUI === 'function') refreshStreakUI(); }
+  if (id === 'profile') { renderProfilePage(); }
+  // Update mobile nav
+  const mobileNav = document.getElementById('mobileNav');
+  if (mobileNav) mobileNav.classList.remove('open');
+  const hamburger = document.getElementById('hamburger');
+  if (hamburger) hamburger.querySelectorAll('span').forEach(s => s.style.transform = '');
+};
+</script>
+<script src="js/skillbridge-features.js"></script>
+</body>
+</html>
